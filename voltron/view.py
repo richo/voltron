@@ -38,6 +38,7 @@ class VoltronView (object):
     BASE_DEFAULT_CONFIG = {
         "update_on": "stop",
         "clear": True,
+        "quit_on_disconnect": False,
         "header": {
             "show":         True,
             "pad":          " ",

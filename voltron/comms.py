@@ -29,7 +29,7 @@ class Client (asyncore.dispatcher):
         self.reg_info = None
         self.do_connect()
 
-    def do_connect(self):
+    def do_connect(self, retry=True):
         self.create_socket(socket.AF_UNIX, socket.SOCK_STREAM)
         success = False
         while not success:
@@ -40,6 +40,8 @@ class Client (asyncore.dispatcher):
             except Exception as e:
                 self.view.render(error="Failed connecting to server:" + str(e))
                 time.sleep(1)
+                if not retry:
+                    raise e
 
     def register(self):
         log.debug('Client {} registering with config: {}'.format(self, str(self.config)))
@@ -65,7 +67,8 @@ class Client (asyncore.dispatcher):
 
     def handle_close(self):
         self.close()
-        self.do_connect()
+        retry = not self.config["quit_on_disconnect"]
+        self.do_connect(retry)
 
     def writable(self):
         return False
