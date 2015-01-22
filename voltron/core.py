@@ -1,4 +1,5 @@
 import os
+import sys
 import errno
 import logging
 import socket
@@ -197,14 +198,11 @@ class ServerThread(threading.Thread):
             # Retrying the select(2) call is pretty safe, but in the interests
             # of not locking up the debugger we'll only retry 3 times before
             # reraising.
-            for i in range(3):
-                try:
-                    rfds, _, _ = select.select([serv, self.exit_pipe] + self.clients, [], [])
-                except select.error as ex:
-                    # sys.stderr.write("=========\nInterrupted by %s\n=========\n", repr(ex))
-                    if ex[0] == errno.EINTR: # interrupted system call
-                        if i != 2:
-                            continue
+            try:
+                rfds, _, _ = select.select([serv, self.exit_pipe] + self.clients, [], [])
+            except select.error as ex:
+                sys.stderr.write("=========\nInterrupted by %s\n=========\n" % repr(ex))
+                if ex[0] != errno.EINTR: # interrupted system call
                     raise
 
             # handle any ready sockets
