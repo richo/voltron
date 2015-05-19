@@ -21,8 +21,10 @@ log = logging.getLogger("core")
 READ_MAX = 0xFFFF
 
 if sys.version_info.major == 2:
+    is_eintr = lambda ex: ex[0] == errno.EINTR
     STRTYPES = (str, unicode)
 elif sys.version_info.major == 3:
+    is_eintr = lambda ex: isinstance(ex, InterruptedError)
     STRTYPES = (str, bytes)
 else:
     raise RuntimeError("Not sure what strings look like on python %d" %
@@ -211,7 +213,7 @@ class ServerThread(threading.Thread):
                     rfds, _, _ = select.select([serv, self.exit_pipe] + self.clients, [], [])
                 except select.error as ex:
                     # sys.stderr.write("=========\nInterrupted by %s\n=========\n", repr(ex))
-                    if ex[0] == errno.EINTR: # interrupted system call
+                    if is_eintr(ex):
                         if i != 2:
                             continue
                     raise
